@@ -22,10 +22,21 @@ https://www.gnu.org/licenses/
 #include <time.h>
 #include <math.h>
 
+#if RAND_MAX == 0x7FFF 
+static const int RAND_MAX32 = (RAND_MAX << 15) | RAND_MAX;
+
+// Return a random number between 0 and m-1
+static unsigned getrand(unsigned m)
+{
+    int r = (rand() << 15) | rand();
+    return (unsigned)((double)r / ((double)(RAND_MAX32 + 1)) * m);
+}
+#else
 static unsigned getrand(unsigned m)
 {
     return (unsigned)((double)rand() / ((double)RAND_MAX + 1) * m);
 }
+#endif
 
 static double mean(double* x, int n)
 {
@@ -60,13 +71,13 @@ int main()
     puts("Monty Hall Simulator v0.0001 Copyright (C) 2024  Obseedian\n"
         "Licensed under GNU GPL v2\n");
     printf("Enter number of runs...: ");
-    gets_s((char*)&buf, sizeof(buf));
+    fgets((char*)&buf, sizeof(buf), stdin);
     runs = atoi((char*)&buf);
     if (runs <= 0)
         return 0;
 
     printf("Enter N (games per run): ");
-    gets_s((char*)&buf, sizeof(buf));
+    fgets((char*)&buf, sizeof(buf), stdin);
     n = atoi((char*)&buf);
     if (n <= 0)
         return 0;
@@ -195,4 +206,3 @@ int main()
     free(arr_stays_winpct);
     free(arr_switches_winpct);
 }
-
