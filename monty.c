@@ -188,11 +188,11 @@ static void pcg64_seed(uint64_t seed)
 static uint64_t (*rand64)(void);
 static void     (*rseed)(uint64_t);
 
-static uint64_t (*rng_rand64[3])(void)      = { pcg64_rand, sfc64_rand, sfc64_tf_rand };
-static void     (*rng_seed[3])(uint64_t)    = { pcg64_seed, sfc64_seed, sfc64_tf_seed };
-static char*    rng_name[3]                 = { "PCG64", "SFC64", "SFC64-TF" };
+#define RNG_COUNT 3
 
-enum { RNG_PCG64 = 1, RNG_SFC64 = 2, RNG_SFC64_TF = 3 };
+static uint64_t (*rng_rand64[RNG_COUNT])(void)      = { pcg64_rand, sfc64_rand, sfc64_tf_rand };
+static void     (*rng_seed[RNG_COUNT])(uint64_t)    = { pcg64_seed, sfc64_seed, sfc64_tf_seed };
+static char*    rng_name[RNG_COUNT]                 = { "PCG64", "SFC64", "SFC64-TF" };
 
 static inline uint32_t rand32(void)
 {
@@ -216,6 +216,7 @@ static double frand(void)
     return r.d - 1.0; /* bitcast & return number in interval [0,1) */
 }
 
+/* Lemire */
 static uint32_t bounded_rand(uint32_t range)
 {
     uint32_t x = rand32();
@@ -311,7 +312,7 @@ int main()
  
     unsigned rng;
 
-    puts("Monty Hall Simulator v0.1 Copyright (C) 2024  Obseedian\n"
+    puts("Monty Hall Simulator v1.0 Copyright (C) 2024  Obseedian\n"
         "Licensed under GNU GPL v2\n");
 
     if (!(num_doors = getuint("Enter number of doors [%u]: ", 3)))
@@ -325,10 +326,16 @@ int main()
         return 0;
     if (!(n =    getuint("Enter N (games per run) [%u]: ", 1000)))
         return 0;
-    rng = getuint("Select random number generator (1 - PCG64, 2 - SFC64, 3 - SFC64-TF) [%u]: ", 1);
-    if (rng < 1 || rng > 3) {
+
+    printf("Select random number generator from list below:\n");
+    for (rng = 0; rng < RNG_COUNT; rng++) {
+        printf(" %u - %s\n", rng + 1, rng_name[rng]);
+    }
+    rng = getuint("Select RNG [%u]: ", 1);
+    if (rng < 1 || rng > RNG_COUNT) {
         return 0;
     }
+
     door_mask = (1 << num_doors) - 1;
     rand64 = rng_rand64[rng - 1];
     rseed = rng_seed[rng - 1];
